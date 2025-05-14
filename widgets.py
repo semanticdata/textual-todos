@@ -1,9 +1,9 @@
-from textual.app import ComposeResult
-from textual.widgets import Input, Button, Label
-from textual.containers import Vertical, Horizontal
-from textual.screen import ModalScreen
 from textual import on
+from textual.app import ComposeResult
+from textual.containers import Horizontal, Vertical
 from textual.message import Message
+from textual.screen import ModalScreen
+from textual.widgets import Button, Input, Label
 
 
 class EditDialog(ModalScreen):

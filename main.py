@@ -1,8 +1,9 @@
-from textual.app import App, ComposeResult
-from textual.widgets import ListView, Footer, ListItem, Label
 from textual import on
+from textual.app import App, ComposeResult
+from textual.widgets import Footer, Label, ListItem, ListView
+
 from models import TaskStore
-from widgets import EditDialog, DeleteConfirmDialog
+from widgets import DeleteConfirmDialog, EditDialog
 
 
 class TodoApp(App):

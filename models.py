@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
+
 import aiofiles
-from atomicwrites import atomic_write
 
 
 class TaskStore:
