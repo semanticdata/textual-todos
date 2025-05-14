@@ -9,9 +9,26 @@ class TodoApp(App):
     """Todo application with working dialog and strikethrough."""
 
     CSS = """
+    ListView {
+        border: solid $primary;
+        height: 1fr;
+        scrollbar-gutter: stable;
+    }
+    ListItem {
+        layout: grid;
+        grid-size: 2;
+        grid-columns: 1fr 3fr;
+    }
+    ListItem:hover {
+        background: $boost;
+    }
     ListItem .completed {
         text-style: strike;
         color: $text-muted;
+    }
+    ListItem > Label {
+        width: 100%;
+        height: 100%;
     }
     Button.error {
         background: $error;
@@ -48,10 +65,12 @@ class TodoApp(App):
         list_view = self.query_one(ListView)
         list_view.clear()
         for task in self.task_store.tasks:
-            label = Label(f"{task['title']}: {task['description']}")
+            title_label = Label(task["title"])
+            desc_label = Label(task["description"])
             if task["completed"]:
-                label.add_class("completed")
-            list_view.append(ListItem(label))
+                title_label.add_class("completed")
+                desc_label.add_class("completed")
+            list_view.append(ListItem(title_label, desc_label))
 
     def action_add_task(self):
         """Open the add-task dialog."""
