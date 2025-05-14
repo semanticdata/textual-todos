@@ -66,7 +66,10 @@ class TodoApp(App):
         list_view = self.query_one(ListView)
         list_view.clear()
         for task in self.task_store.tasks:
-            title_label = Label(task["title"])
+            title_text = task["title"]
+            if task.get("due_date"):
+                title_text += f" (Due: {task['due_date']})"
+            title_label = Label(title_text)
             desc_label = Label(task["description"])
             if task["completed"]:
                 title_label.add_class("completed")
@@ -87,19 +90,6 @@ class TodoApp(App):
             self.update_list()
             self.notify("Task updated!", timeout=3)
 
-    @on(EditDialog.Save)
-    async def handle_save(self, event: EditDialog.Save):
-        """Handle saving a new task."""
-        if self.task_store.validate_task(
-            event.task["title"], event.task["description"]
-        ):
-            await self.task_store.add_task(
-                event.task["title"], event.task["description"]
-            )
-            await self.task_store.save()
-            self.update_list()
-            self.notify("Task saved!", timeout=3)
-
     def compose(self) -> ComposeResult:
         """Layout of the app."""
         yield ListView()
@@ -117,11 +107,16 @@ class TodoApp(App):
         """Handle both new tasks and updates."""
         if event.is_edit:
             result = await self.task_store.update_task(
-                event.task["id"], event.task["title"], event.task["description"]
+                event.task["id"],
+                event.task["title"],
+                event.task["description"],
+                due_date=event.task["due_date"],
             )
         else:
             result = await self.task_store.add_task(
-                event.task["title"], event.task["description"]
+                event.task["title"],
+                event.task["description"],
+                due_date=event.task["due_date"],
             )
 
         if "error" in result:

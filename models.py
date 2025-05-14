@@ -60,7 +60,9 @@ class TaskStore:
         with open(self.path, "w") as f:
             f.write(content)
 
-    def validate_task(self, title: str, description: str) -> Optional[str]:
+    def validate_task(
+        self, title: str, description: str, due_date: Optional[str] = None
+    ) -> Optional[str]:
         """Enhanced validation with specific error messages.
         Returns None if validation passes, or error message if validation fails.
         """
@@ -70,13 +72,19 @@ class TaskStore:
             return "Title cannot exceed 100 characters"
         if len(description) > 500:
             return "Description cannot exceed 500 characters"
+        if due_date:
+            try:
+                datetime.strptime(due_date, "%Y-%m-%d")
+            except ValueError:
+                return "Due date must be in YYYY-MM-DD format"
         return None
 
     async def add_task(
         self,
         title: str,
-        description: str,
+        description: str = "",
         priority: Union[Priority, str] = Priority.MEDIUM,
+        due_date: Optional[str] = None,
     ) -> Dict:
         """Async task addition with priority and creation date.
         Returns a dictionary with either the created task or an error message.
@@ -87,19 +95,20 @@ class TaskStore:
             except ValueError:
                 return {"error": f"Invalid priority value: {priority}"}
 
-        validation_error = self.validate_task(title, description)
+        validation_error = self.validate_task(title, description, due_date)
         if validation_error:
             return {"error": validation_error}
 
         # Only create and save task if validation passes
         task = {
             "id": self.next_id,
-            "title": title,
-            "description": description,
+            "title": title.strip(),
+            "description": description.strip(),
             "completed": False,
             "priority": priority.value,
             "created_at": datetime.now().isoformat(),
             "modified_at": datetime.now().isoformat(),
+            "due_date": due_date if due_date and due_date.strip() else None,
         }
         self.tasks.append(task)
         self.next_id += 1
@@ -120,6 +129,7 @@ class TaskStore:
         title: str,
         description: str,
         priority: Optional[Union[Priority, str]] = None,
+        due_date: Optional[str] = None,
     ) -> Dict:
         """Update an existing task with validation and modification tracking.
         Returns a dictionary with either the updated task or an error message.
@@ -129,7 +139,7 @@ class TaskStore:
         except TaskNotFoundError as e:
             return {"error": str(e)}
 
-        validation_error = self.validate_task(title, description)
+        validation_error = self.validate_task(title, description, due_date)
         if validation_error:
             return {"error": validation_error}
 
@@ -144,6 +154,7 @@ class TaskStore:
                 "title": title,
                 "description": description,
                 "modified_at": datetime.now().isoformat(),
+                "due_date": due_date,
             }
         )
 

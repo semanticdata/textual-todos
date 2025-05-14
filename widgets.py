@@ -60,6 +60,12 @@ class EditDialog(ModalScreen):
                     id="desc-input",
                     value=self.editing_task.get("description", ""),
                 )
+                yield Label("Due Date (YYYY-MM-DD):")
+                yield Input(
+                    placeholder="Optional due date",
+                    id="due-date-input",
+                    value=self.editing_task.get("due_date", ""),
+                )
             with Horizontal(id="buttons"):
                 yield Button("Cancel", id="cancel-button")
                 yield Button(
@@ -73,6 +79,7 @@ class EditDialog(ModalScreen):
         task = {
             "title": self.query_one("#title-input").value,
             "description": self.query_one("#desc-input").value,
+            "due_date": self.query_one("#due-date-input").value or None,
         }
         if self.is_edit:
             task["id"] = self.editing_task["id"]
