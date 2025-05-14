@@ -5,8 +5,6 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "aiofiles>=24.1.0",
-    "atomicwrites>=1.4.1",
     "textual>=3.2.0",
     "textual-dev>=1.7.0",
 ]
