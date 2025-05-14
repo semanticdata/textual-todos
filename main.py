@@ -116,17 +116,19 @@ class TodoApp(App):
     async def handle_save(self, event: EditDialog.Save):
         """Handle both new tasks and updates."""
         if event.is_edit:
-            await self.task_store.update_task(
+            result = await self.task_store.update_task(
                 event.task["id"], event.task["title"], event.task["description"]
             )
-            message = "Task updated!"
         else:
-            await self.task_store.add_task(
+            result = await self.task_store.add_task(
                 event.task["title"], event.task["description"]
             )
-            message = "Task saved!"
 
-        await self.task_store.save()
+        if "error" in result:
+            self.notify(result["error"], severity="error", timeout=3)
+            return
+
+        message = "Task updated!" if event.is_edit else "Task saved!"
         self.update_list()
         self.notify(message, timeout=3)
 
