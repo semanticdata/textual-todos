@@ -55,17 +55,18 @@ class TodoApp(App):
     def __init__(self):
         super().__init__()
         self.task_store = TaskStore()
+        self.tasks = []
 
     async def on_mount(self) -> None:
         """Load tasks when the app starts."""
-        await self.task_store.load()
+        self.tasks = await self.task_store.load()
         self.update_list()
 
     def update_list(self):
         """Refresh the ListView with current tasks."""
         list_view = self.query_one(ListView)
         list_view.clear()
-        for task in self.task_store.tasks:
+        for task in self.tasks:
             title_text = task["title"]
             if task.get("due_date"):
                 title_text += f" (Due: {task['due_date']})"
@@ -84,9 +85,9 @@ class TodoApp(App):
         """Toggle completion for selected task."""
         if selected := self.query_one(ListView).highlighted_child:
             index = self.query_one(ListView).index
-            task_id = self.task_store.tasks[index]["id"]
+            task_id = self.tasks[index]["id"]
             await self.task_store.toggle_completion(task_id)
-            await self.task_store.save()
+            self.tasks = await self.task_store.load()
             self.update_list()
             self.notify("Task updated!", timeout=3)
 
@@ -99,7 +100,7 @@ class TodoApp(App):
         """Open edit dialog for selected task."""
         if selected := self.query_one(ListView).highlighted_child:
             index = self.query_one(ListView).index
-            task = self.task_store.tasks[index]
+            task = self.tasks[index]
             self.push_screen(EditDialog(task))
 
     @on(EditDialog.Save)
@@ -123,8 +124,11 @@ class TodoApp(App):
             self.notify(result["error"], severity="error", timeout=3)
             return
 
-        message = "Task updated!" if event.is_edit else "Task saved!"
+        # Reload tasks from database to ensure UI is in sync
+        self.tasks = await self.task_store.load()
         self.update_list()
+
+        message = "Task updated!" if event.is_edit else "Task saved!"
         self.notify(message, timeout=3)
 
     async def action_delete_task(self):
@@ -136,16 +140,16 @@ class TodoApp(App):
             self.notify("No task selected!", timeout=3)
             return
 
-        if not self.task_store.tasks:
+        if not self.tasks:
             self.notify("Task list is empty!", timeout=3)
             return
 
         index = list_view.index
-        if index is None or index >= len(self.task_store.tasks):
+        if index is None or index >= len(self.tasks):
             self.notify("Invalid selection!", timeout=3)
             return
 
-        task = self.task_store.tasks[index]
+        task = self.tasks[index]
 
         # Show confirmation dialog
         dialog = DeleteConfirmDialog(task["title"], task["id"])
@@ -156,7 +160,7 @@ class TodoApp(App):
         """Handle the deletion of a task."""
         success = await self.task_store.delete_task(message.task_id)
         if success:
-            await self.task_store.save()
+            self.tasks = await self.task_store.load()
             self.update_list()
             self.notify("Task deleted!", timeout=3)
         else:

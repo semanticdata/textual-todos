@@ -11,3 +11,4 @@ wheels/
 
 # Generated files
 todos.json
+todos.db
