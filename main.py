@@ -37,6 +37,7 @@ class TodoApp(App):
     }
     #dialog {
         width: 40;
+        border: thick $primary;
     }
     #question {
         padding: 1;

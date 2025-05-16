@@ -16,9 +16,6 @@ class EditDialog(ModalScreen):
             super().__init__()
 
     CSS = """
-    EditDialog {
-        align: center middle;
-    }
     #dialog {
         width: 60;
         height: auto;
@@ -37,6 +34,14 @@ class EditDialog(ModalScreen):
     }
     #save-button {
         margin-left: 1;
+    }
+    #question {
+        padding: 1;
+        text-align: center;
+    }
+    Button.error {
+        background: $error;
+        color: auto;
     }
     """
 
