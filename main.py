@@ -31,17 +31,36 @@ class TodoApp(App):
         width: 100%;
         height: 100%;
     }
+    #buttons {
+        height: auto;
+        padding: 1;
+        layout: horizontal;
+        align: right middle;
+    }
     Button.error {
         background: $error;
         color: auto;
     }
-    #dialog {
+    #edit-dialog {
         width: 40;
         border: thick $primary;
     }
     #question {
         padding: 1;
         text-align: center;
+    }
+    #delete-dialog {
+        width: 60;
+        height: auto;
+        border: thick $primary;
+        background: $surface;
+    }
+    #save-button {
+        margin-left: 1;
+    }
+    #fields {
+        height: auto;
+        padding: 1;
     }
     """
 

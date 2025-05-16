@@ -15,43 +15,13 @@ class EditDialog(ModalScreen):
             self.is_edit = is_edit
             super().__init__()
 
-    CSS = """
-    #dialog {
-        width: 60;
-        height: auto;
-        border: thick $primary;
-        background: $surface;
-    }
-    #fields {
-        height: auto;
-        padding: 1;
-    }
-    #buttons {
-        height: auto;
-        padding: 1;
-        layout: horizontal;
-        align: right middle;
-    }
-    #save-button {
-        margin-left: 1;
-    }
-    #question {
-        padding: 1;
-        text-align: center;
-    }
-    Button.error {
-        background: $error;
-        color: auto;
-    }
-    """
-
     def __init__(self, task: dict = None):
         super().__init__()
         self.editing_task = task or {}
         self.is_edit = task is not None
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="dialog"):
+        with Vertical(id="edit-dialog"):
             with Vertical(id="fields"):
                 yield Label("Title:")
                 yield Input(
@@ -110,7 +80,7 @@ class DeleteConfirmDialog(ModalScreen):
         self.task_id = task_id
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="dialog"):
+        with Vertical(id="delete-dialog"):
             yield Label(f"Delete '{self.task_title}'?", id="question")
             with Horizontal(id="buttons"):
                 yield Button("Cancel", id="cancel-button")
