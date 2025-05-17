@@ -45,7 +45,7 @@ Screen {
     color: $text-muted;
 }
 
-#buttons {
+.dialog-buttons {
     height: auto;
     padding: 1;
     layout: horizontal;
@@ -58,7 +58,7 @@ Button.error {
 }
 
 
-#buttons>Button:last-child {
+.dialog-buttons>Button:last-child {
     margin-left: 2;
 }
 
@@ -82,9 +82,10 @@ Button.error {
     padding: 1;
 }
 
-#title-input,
-#desc-input,
-#due-date-input,
+#edit-title,
+#edit-desc,
+#edit-due-date,
+#priority-select,
 #theme-select,
 #project-select,
 #project-list,
@@ -110,7 +111,7 @@ Button.error {
     height: 1fr;
 }
 
-#desc-input,
+#edit-desc,
 #task-view-desc {
     min-height: 5;
 }

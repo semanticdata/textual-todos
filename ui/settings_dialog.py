@@ -1,10 +1,19 @@
 """Settings dialog implementation."""
 
-from textual import on
+from dataclasses import dataclass
+
+from textual import events, on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Label, Select
+
+
+@dataclass
+class ThemeChanged(events.Event):
+    """Event emitted when the theme is changed."""
+
+    theme: str  # The name of the selected theme
 
 
 class SettingsDialog(ModalScreen):
@@ -50,11 +59,8 @@ class SettingsDialog(ModalScreen):
     def on_save(self) -> None:
         """Handle save button click."""
         theme = self.query_one("#theme-select", Select).value
-        if hasattr(self.app, "dark_theme"):
-            self.app.dark_theme = theme
-            self.app.dark = (
-                theme.endswith("dark") or theme == "nord"
-            )  # Handle dark/light mode
+        # Emit the ThemeChanged event with the selected theme
+        self.post_message(ThemeChanged(theme))
         self.dismiss()
 
     @on(Button.Pressed, "#cancel-button")

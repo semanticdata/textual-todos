@@ -1,5 +1,6 @@
 from textual import on
 from textual.app import App, ComposeResult
+from textual.message import Message
 from textual.widgets import Footer, Header
 
 from models import TaskStore
@@ -10,6 +11,7 @@ from ui import (
     SettingsDialog,
     TaskList,
     TaskView,
+    ThemeChanged,
 )
 
 
@@ -26,6 +28,13 @@ class TodoApp(App):
         ("s", "settings", "Settings"),
         ("q", "quit", "Quit"),
     ]
+
+    class ThemeChangedMessage(Message):
+        """Message sent when the theme changes."""
+
+        def __init__(self, theme: str):
+            self.theme = theme
+            super().__init__()
 
     def __init__(self):
         super().__init__()
@@ -144,6 +153,16 @@ class TodoApp(App):
     def action_settings(self):
         """Open settings dialog."""
         self.push_screen(SettingsDialog())
+
+    @on(ThemeChanged)
+    def handle_theme_changed(self, event: ThemeChanged) -> None:
+        """Handle theme change event from settings dialog."""
+        theme = event.theme
+        # Apply the selected theme
+        self.theme = theme
+        # Post a message about the theme change
+        self.post_message(self.ThemeChangedMessage(theme))
+        self.notify(f"Theme changed to {theme}", timeout=3)
 
 
 if __name__ == "__main__":
