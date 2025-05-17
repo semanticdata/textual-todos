@@ -24,20 +24,8 @@ Screen {
     text-style: bold;
 }
 
-.task-table > .datatable--header-cell {
-    padding: 1;
-}
-
-.task-table > .datatable--row {
-    height: 3;
-}
-
-.task-table > .datatable--row:hover {
-    background: $boost;
-}
-
 .task-table > .datatable--row > .datatable--cell {
-    padding: 0 1;
+    padding: 0;
 }
 
 .completed {
@@ -114,6 +102,10 @@ Button.error {
 #edit-desc,
 #task-view-desc {
     min-height: 5;
+}
+
+#task-view-desc {
+    height: 1fr;
 }
 
 Button {

@@ -27,11 +27,6 @@ class TaskView(Vertical):
             title_input.border_title = "Title"
             yield title_input
 
-            # Task description
-            desc_input = Input(id="task-view-desc", disabled=True)
-            desc_input.border_title = "Description"
-            yield desc_input
-
             # Due date
             due_date = Input(id="task-view-due-date", disabled=True)
             due_date.border_title = "Due Date"
@@ -46,6 +41,11 @@ class TaskView(Vertical):
             status_input = Input(id="task-view-status", disabled=True)
             status_input.border_title = "Status"
             yield status_input
+
+            # Task description
+            desc_input = Input(id="task-view-desc", disabled=True)
+            desc_input.border_title = "Description"
+            yield desc_input
 
     def update_task(self, task: Optional[TaskData]) -> None:
         """Update the task view with the selected task's details.
