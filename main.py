@@ -1,9 +1,9 @@
 from textual import on
 from textual.app import App, ComposeResult
-from textual.widgets import Footer, Label, ListItem, ListView, Header
+from textual.widgets import Footer, Header, Label, ListItem, ListView
 
 from models import TaskStore
-from widgets import DeleteConfirmDialog, EditDialog
+from widgets import DeleteConfirmDialog, EditDialog, SettingsDialog
 
 
 class TodoApp(App):
@@ -41,26 +41,29 @@ class TodoApp(App):
         background: $error;
         color: auto;
     }
-    #edit-dialog {
-        width: 40;
-        border: thick $primary;
+    #buttons > Button:last-child {
+        margin-left: 2;
+    }
+    #edit-dialog,
+    #delete-dialog,
+    #settings-dialog {
+        width: 60;
+        height: 1fr;
+        border: solid $primary;
+        background: $surface;
     }
     #question {
         padding: 1;
         text-align: center;
     }
-    #delete-dialog {
-        width: 60;
-        height: auto;
-        border: thick $primary;
-        background: $surface;
-    }
-    #save-button {
-        margin-left: 1;
-    }
     #fields {
         height: auto;
         padding: 1;
+    }
+    #title-input,
+    #desc-input,
+    #due-date-input {
+        border: solid $primary;
     }
     """
 
@@ -69,6 +72,7 @@ class TodoApp(App):
         ("e", "edit_task", "Edit"),
         ("d", "delete_task", "Delete"),
         ("c", "complete_task", "Complete"),
+        ("s", "settings", "Settings"),
         ("q", "quit", "Quit"),
     ]
 
@@ -191,6 +195,10 @@ class TodoApp(App):
             self.notify("Task deleted!", timeout=3)
         else:
             self.notify("Failed to delete task!", severity="error", timeout=3)
+
+    def action_settings(self):
+        """Open settings dialog."""
+        self.push_screen(SettingsDialog())
 
 
 if __name__ == "__main__":

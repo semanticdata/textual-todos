@@ -1,7 +1,7 @@
 [project]
 name = "textual-todos"
 version = "0.1.0"
-description = "Add your description here"
+description = "A simple todo list app for the terminal built with Textual."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
