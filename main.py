@@ -119,7 +119,6 @@ class TodoApp(App):
         """Refresh the ListView with current tasks."""
         list_view = self.query_one(ListView)
         list_view.border_title = "Tasks"
-        list_view.id = "task-list"
         list_view.clear()
         for task in self.tasks:
             title_text = task["title"]
@@ -150,8 +149,8 @@ class TodoApp(App):
     def compose(self) -> ComposeResult:
         """Layout of the app."""
         yield Header()
-        yield ListView()
-        yield ProjectList(["Project 1", "Project 2", "Project 3"])
+        yield ListView(id="task-list")
+        yield ProjectList()
         yield TaskView()
         yield Footer()
 
@@ -178,6 +177,9 @@ class TodoApp(App):
                 event.task["title"],
                 event.task["description"],
                 due_date=event.task["due_date"],
+                project=event.task["project_name"]
+                if "project_name" in event.task
+                else "inbox",
             )
 
         if "error" in result:

@@ -1,3 +1,5 @@
+import sqlite3
+
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
@@ -17,15 +19,24 @@ from textual.widgets import (
 class ProjectList(ListView):
     """List of projects."""
 
-    def __init__(self, projects: list[str]):
+    def __init__(self):
         super().__init__()
-        self.projects = projects
         self.border_title = "Projects"
         self.id = "project-list"
+        self.projects = []
 
-    def compose(self) -> ComposeResult:
+    async def on_mount(self) -> None:
+        """Load projects when the list is mounted."""
+        with sqlite3.connect("todos.db") as conn:
+            cursor = conn.execute("SELECT name FROM projects ORDER BY name")
+            self.projects = [row[0] for row in cursor.fetchall()]
+        self.refresh_projects()
+
+    def refresh_projects(self) -> None:
+        """Refresh the project list view."""
+        self.clear()
         for project in self.projects:
-            yield ListItem(Label(project, classes="project-label"))
+            self.append(ListItem(Label(project.title(), classes="project-label")))
 
 
 class TaskView(Placeholder):
@@ -50,6 +61,15 @@ class EditDialog(ModalScreen):
         super().__init__()
         self.editing_task = task or {}
         self.is_edit = task is not None
+        self.project_list = [("Inbox", "Inbox")]
+
+    async def on_mount(self) -> None:
+        """Load projects when dialog is mounted."""
+        with sqlite3.connect("todos.db") as conn:
+            cursor = conn.execute("SELECT name FROM projects WHERE name != 'Inbox'")
+            projects = cursor.fetchall()
+            self.project_list.extend((p[0], p[0]) for p in projects)
+            self.query_one("#project-select", Select).options = self.project_list
 
     def compose(self) -> ComposeResult:
         editDialog = Vertical(id="edit-dialog")
@@ -80,6 +100,14 @@ class EditDialog(ModalScreen):
                 inputDate.border_title = "Due Date"
                 yield inputDate
 
+                selectProject = Select(
+                    id="project-select",
+                    options=self.project_list,
+                    value=self.editing_task.get("project_name", "Inbox"),
+                )
+                selectProject.border_title = "Project"
+                yield selectProject
+
             with Horizontal(id="buttons"):
                 yield Button("Cancel", id="cancel-button")
                 yield Button(
@@ -94,6 +122,7 @@ class EditDialog(ModalScreen):
             "title": self.query_one("#title-input", Input).value,
             "description": self.query_one("#desc-input", Input).value,
             "due_date": self.query_one("#due-date-input", Input).value or None,
+            "project_name": self.query_one("#project-select", Select).value,
         }
         if self.is_edit:
             task["id"] = self.editing_task["id"]

@@ -13,14 +13,14 @@ class Priority(Enum):
 
 
 class TaskValidationError(Exception):
-    """Raised when task validation fails."""
-
     pass
 
 
 class TaskNotFoundError(Exception):
-    """Raised when a task is not found."""
+    pass
 
+
+class ProjectNotFoundError(Exception):
     pass
 
 
@@ -30,8 +30,14 @@ class TaskStore:
         self._init_db()
 
     def _init_db(self):
-        """Initialize SQLite database with tasks table."""
+        """Initialize SQLite database with projects and tasks tables."""
         with sqlite3.connect(self.path) as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS projects (
+                    id INTEGER PRIMARY KEY,
+                    name TEXT UNIQUE NOT NULL
+                )
+            """)
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS tasks (
                     id INTEGER PRIMARY KEY,
@@ -41,30 +47,45 @@ class TaskStore:
                     priority TEXT NOT NULL,
                     created_at TEXT NOT NULL,
                     modified_at TEXT NOT NULL,
-                    due_date TEXT
+                    due_date TEXT,
+                    project_id INTEGER NOT NULL,
+                    FOREIGN KEY(project_id) REFERENCES projects(id)
                 )
             """)
+            # Ensure default project "Inbox" exists
+            conn.execute("""
+                INSERT OR IGNORE INTO projects (name) VALUES ("Inbox")
+            """)
+
+    def _get_project_id(self, project_name: str = "Inbox") -> int:
+        with sqlite3.connect(self.path) as conn:
+            cursor = conn.execute(
+                "SELECT id FROM projects WHERE name = ?", (project_name,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return row[0]
+            raise ProjectNotFoundError(f"Project '{project_name}' not found")
 
     async def load(self) -> List[Dict]:
-        """Load tasks from SQLite database."""
         try:
             return await asyncio.to_thread(self._read_db)
         except sqlite3.Error:
             return []
 
     def _read_db(self) -> List[Dict]:
-        """Synchronous database read operation."""
         with sqlite3.connect(self.path) as conn:
             conn.row_factory = sqlite3.Row
-            cursor = conn.execute("SELECT * FROM tasks")
+            cursor = conn.execute("""
+                SELECT tasks.*, projects.name AS project_name
+                FROM tasks
+                JOIN projects ON tasks.project_id = projects.id
+            """)
             return [dict(row) for row in cursor.fetchall()]
 
     def validate_task(
         self, title: str, description: str, due_date: Optional[str] = None
     ) -> Optional[str]:
-        """Enhanced validation with specific error messages.
-        Returns None if validation passes, or error message if validation fails.
-        """
         if not title.strip():
             return "Title cannot be empty"
         if len(title) > 100:
@@ -84,10 +105,8 @@ class TaskStore:
         description: str = "",
         priority: Union[Priority, str] = Priority.MEDIUM,
         due_date: Optional[str] = None,
+        project: str = "Inbox",
     ) -> Dict:
-        """Async task addition with priority and creation date.
-        Returns a dictionary with either the created task or an error message.
-        """
         if isinstance(priority, str):
             try:
                 priority = Priority(priority.lower())
@@ -110,20 +129,20 @@ class TaskStore:
         }
 
         try:
-            task["id"] = await asyncio.to_thread(self._insert_task, task)
+            project_id = await asyncio.to_thread(self._get_project_id, project)
+            task["id"] = await asyncio.to_thread(self._insert_task, task, project_id)
             return task
         except sqlite3.Error as e:
             return {"error": f"Database error: {str(e)}"}
 
-    def _insert_task(self, task: Dict) -> int:
-        """Synchronous task insertion operation."""
+    def _insert_task(self, task: Dict, project_id: int) -> int:
         with sqlite3.connect(self.path) as conn:
             cursor = conn.execute(
                 """
                 INSERT INTO tasks (
                     title, description, completed, priority,
-                    created_at, modified_at, due_date
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    created_at, modified_at, due_date, project_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     task["title"],
@@ -133,6 +152,7 @@ class TaskStore:
                     task["created_at"],
                     task["modified_at"],
                     task["due_date"],
+                    project_id,
                 ),
             )
             if cursor.lastrowid is None:
@@ -140,7 +160,6 @@ class TaskStore:
             return cursor.lastrowid
 
     async def toggle_completion(self, task_id: int) -> Dict:
-        """Toggle task completion status with modification tracking."""
         try:
             task = await self._get_task_by_id(task_id)
             task["completed"] = not task["completed"]
@@ -158,9 +177,6 @@ class TaskStore:
         priority: Optional[Union[Priority, str]] = None,
         due_date: Optional[str] = None,
     ) -> Dict:
-        """Update an existing task with validation and modification tracking.
-        Returns a dictionary with either the updated task or an error message.
-        """
         try:
             task = await self._get_task_by_id(task_id)
         except TaskNotFoundError as e:
@@ -195,7 +211,6 @@ class TaskStore:
             return {"error": f"Database error: {str(e)}"}
 
     def _update_task(self, task: Dict) -> None:
-        """Synchronous task update operation."""
         with sqlite3.connect(self.path) as conn:
             conn.execute(
                 """
@@ -216,21 +231,18 @@ class TaskStore:
             )
 
     async def delete_task(self, task_id: int) -> bool:
-        """Remove a task by ID and return success status."""
         try:
-            await self._get_task_by_id(task_id)  # Verify task exists
+            await self._get_task_by_id(task_id)
             return await asyncio.to_thread(self._delete_task, task_id)
         except (TaskNotFoundError, sqlite3.Error):
             return False
 
     def _delete_task(self, task_id: int) -> bool:
-        """Synchronous task deletion operation."""
         with sqlite3.connect(self.path) as conn:
             cursor = conn.execute("DELETE FROM tasks WHERE id=?", (task_id,))
             return cursor.rowcount > 0
 
     async def _get_task_by_id(self, task_id: int) -> Dict:
-        """Helper method to get task by ID or raise error."""
         try:
             task = await asyncio.to_thread(self._get_task_by_id_sync, task_id)
             if task:
@@ -240,7 +252,6 @@ class TaskStore:
             raise TaskNotFoundError(f"Database error: {str(e)}")
 
     def _get_task_by_id_sync(self, task_id: int) -> Optional[Dict]:
-        """Synchronous operation to get task by ID."""
         with sqlite3.connect(self.path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.execute("SELECT * FROM tasks WHERE id=?", (task_id,))
@@ -253,7 +264,6 @@ class TaskStore:
         priority: Optional[Union[Priority, str]] = None,
         completed: Optional[bool] = None,
     ) -> List[Dict]:
-        """Search tasks with filtering options."""
         if isinstance(priority, str):
             if priority.strip():
                 try:
@@ -273,7 +283,6 @@ class TaskStore:
     def _search_tasks_sync(
         self, query: str, priority: Optional[Priority], completed: Optional[bool]
     ) -> List[Dict]:
-        """Synchronous task search operation."""
         with sqlite3.connect(self.path) as conn:
             conn.row_factory = sqlite3.Row
             conditions = []
