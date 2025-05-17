@@ -77,7 +77,7 @@ class DatabaseConnection:
                 )
             else:
                 # Database exists, run migrations if needed
-                self._run_migrations(conn, current_version[0])
+                self._run_migrations(conn, current_version["version"])
 
     def _run_migrations(self, conn: sqlite3.Connection, current_version: int) -> None:
         """Run database migrations if needed.

@@ -1,13 +1,14 @@
 from textual import on
 from textual.app import App, ComposeResult
-from textual.widgets import Footer, Header, Label, ListItem, ListView
+from textual.widgets import Footer, Header
 
 from models import TaskStore
-from widgets import (
+from ui import (
     DeleteConfirmDialog,
     EditDialog,
     ProjectList,
     SettingsDialog,
+    TaskList,
     TaskView,
 )
 
@@ -40,45 +41,16 @@ class TodoApp(App):
         self.update_list()
 
     def update_list(self):
-        """Refresh the ListView with current tasks."""
-        list_view = self.query_one(ListView)
-        list_view.border_title = "Tasks"
-        list_view.clear()
-
-        title_header = Label("[b]Title[/b]", classes="header")
-        desc_header = Label("[b]Description[/b]", classes="header")
-        due_header = Label("[b]Due Date[/b]", classes="header")
-        list_view.append(ListItem(title_header, desc_header, due_header))
-
-        for task in self.tasks:
-            title_text = task["title"]
-            title_label = Label(title_text)
-            desc_label = Label(task["description"])
-            due_date_label = Label(task["due_date"])
-            if task["completed"]:
-                title_label.add_class("completed")
-                desc_label.add_class("completed")
-                due_date_label.add_class("completed")
-            list_view.append(ListItem(title_label, desc_label, due_date_label))
-
+        """Refresh the task list with current tasks."""
+        task_list = self.query_one(TaskList)
+        task_list.update_table(self.tasks)
         # Update task view with no selection
         self.query_one(TaskView).update_task(None)
 
-    @on(ListView.Highlighted)
-    def handle_selection(self, event: ListView.Highlighted) -> None:
-        """Handle task selection in the list view."""
-        list_view = self.query_one(ListView)
-        # Check if index is valid (greater than 0 because 0 is the header)
-        if (
-            event.item is not None
-            and list_view.index is not None
-            and list_view.index > 0
-        ):
-            # Subtract 1 from index to account for header row
-            task = self.tasks[list_view.index - 1]
-            self.query_one(TaskView).update_task(task)
-        else:
-            self.query_one(TaskView).update_task(None)
+    @on(TaskList.Selected)
+    def handle_task_selected(self, event: TaskList.Selected) -> None:
+        """Handle task selection in the task list."""
+        self.query_one(TaskView).update_task(event.task)
 
     def action_add_task(self):
         """Open the add-task dialog."""
@@ -86,30 +58,29 @@ class TodoApp(App):
 
     async def action_complete_task(self):
         """Toggle completion for selected task."""
-        if self.query_one(ListView).highlighted_child:
-            index = self.query_one(ListView).index
-            if index is not None:
-                task_id = self.tasks[index]["id"]
-                await self.task_store.toggle_completion(task_id)
-                self.tasks = await self.task_store.load()
-                self.update_list()
-                self.notify("Task updated!", timeout=3)
+        task_list = self.query_one(TaskList)
+        selected_task = task_list.get_selected_task()
+        if selected_task:
+            task_id = selected_task["id"]
+            await self.task_store.toggle_completion(task_id)
+            self.tasks = await self.task_store.load()
+            self.update_list()
+            self.notify("Task updated!", timeout=3)
 
     def compose(self) -> ComposeResult:
         """Layout of the app."""
         yield Header()
-        yield ListView(id="task-list")
+        yield TaskList()
         yield ProjectList()
         yield TaskView()
         yield Footer()
 
     def action_edit_task(self):
         """Open edit dialog for selected task."""
-        if self.query_one(ListView).highlighted_child:
-            index = self.query_one(ListView).index
-            if index is not None:
-                task = self.tasks[index]
-                self.push_screen(EditDialog(task))
+        task_list = self.query_one(TaskList)
+        selected_task = task_list.get_selected_task()
+        if selected_task:
+            self.push_screen(EditDialog(selected_task))
 
     @on(EditDialog.Save)
     async def handle_save(self, event: EditDialog.Save):
@@ -144,10 +115,10 @@ class TodoApp(App):
 
     async def action_delete_task(self):
         """Handle task deletion flow."""
-        list_view = self.query_one(ListView)
+        task_list = self.query_one(TaskList)
+        selected_task = task_list.get_selected_task()
 
-        # Guard clauses for all edge cases
-        if not list_view.highlighted_child:
+        if not selected_task:
             self.notify("No task selected!", timeout=3)
             return
 
@@ -155,15 +126,8 @@ class TodoApp(App):
             self.notify("Task list is empty!", timeout=3)
             return
 
-        index = list_view.index
-        if index is None or index >= len(self.tasks):
-            self.notify("Invalid selection!", timeout=3)
-            return
-
-        task = self.tasks[index]
-
         # Show confirmation dialog
-        dialog = DeleteConfirmDialog(task["title"], task["id"])
+        dialog = DeleteConfirmDialog(selected_task["title"], selected_task["id"])
         await self.push_screen(dialog)
 
     @on(DeleteConfirmDialog.Delete)

@@ -10,26 +10,39 @@ Screen {
     height: 1fr;
     scrollbar-gutter: stable;
     row-span: 2;
+    padding: 0;
 }
 
-ListItem {
-    layout: grid;
-    grid-size: 3;
-    grid-columns: 1fr 2fr 1fr;
+.task-table {
+    width: 100%;
+    height: 100%;
 }
 
-ListItem:hover {
+.task-table > .datatable--header {
+    background: $primary;
+    color: $text;
+    text-style: bold;
+}
+
+.task-table > .datatable--header-cell {
+    padding: 1;
+}
+
+.task-table > .datatable--row {
+    height: 3;
+}
+
+.task-table > .datatable--row:hover {
     background: $boost;
 }
 
-ListItem .completed {
-    text-style: strike;
-    color: $text-muted;
+.task-table > .datatable--row > .datatable--cell {
+    padding: 0 1;
 }
 
-ListItem>Label {
-    width: 100%;
-    height: 100%;
+.completed {
+    text-style: strike;
+    color: $text-muted;
 }
 
 #buttons {
@@ -78,7 +91,9 @@ Button.error {
 #task-view,
 #task-view-title,
 #task-view-desc,
-#task-view-due-date {
+#task-view-due-date,
+#task-view-project,
+#task-view-status {
     border: solid $primary;
 }
 
