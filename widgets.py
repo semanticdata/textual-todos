@@ -3,7 +3,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.message import Message
 from textual.screen import ModalScreen
-from textual.widgets import Button, Input, Label
+from textual.widgets import Button, Input, Label, Select
 
 
 class EditDialog(ModalScreen):
@@ -109,11 +109,28 @@ class DeleteConfirmDialog(ModalScreen):
 class SettingsDialog(ModalScreen):
     """Dialog for application settings."""
 
+    selectThemeList = [
+        ("textual-dark", "textual-dark"),
+        ("textual-light", "textual-light"),
+        ("nord", "nord"),
+        ("gruvbox", "gruvbox"),
+        ("dracula", "dracula"),
+        ("tokyo-night", "tokyo-night"),
+        ("monokai", "monokai"),
+        ("flexoki", "flexoki"),
+        ("catppuccin-mocha", "catppuccin-mocha"),
+        ("catppuccin-latte", "catppuccin-latte"),
+        ("solarized-light", "solarized-light"),
+    ]
+
     def compose(self) -> ComposeResult:
         settingsDialog = Vertical(id="settings-dialog")
         settingsDialog.border_title = "Settings"
         with settingsDialog:
-            yield Label("Settings go here")
+            # yield Label("Settings go here")
+            selectTheme = Select(options=self.selectThemeList, id="theme-select")
+            selectTheme.border_title = "Select Theme"
+            yield selectTheme
             with Horizontal(id="buttons"):
                 yield Button("Cancel", id="cancel-button")
                 yield Button("Save", id="save-button", variant="primary")

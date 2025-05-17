@@ -62,8 +62,12 @@ class TodoApp(App):
     }
     #title-input,
     #desc-input,
-    #due-date-input {
+    #due-date-input,
+    #theme-select {
         border: solid $primary;
+    }
+    #theme-select {
+        margin: 1 0;
     }
     """
 
