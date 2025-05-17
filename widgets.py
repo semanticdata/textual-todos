@@ -11,7 +11,6 @@ from textual.widgets import (
     Label,
     ListItem,
     ListView,
-    Placeholder,
     Select,
 )
 
@@ -39,13 +38,46 @@ class ProjectList(ListView):
             self.append(ListItem(Label(project.title(), classes="project-label")))
 
 
-class TaskView(Placeholder):
+class TaskView(Vertical):
     """View for displaying additional task information and making quick edits."""
 
     def __init__(self):
         super().__init__()
         self.id = "task-view"
         self.border_title = "Task Details"
+        self.selected_task = None
+
+    def compose(self) -> ComposeResult:
+        """Layout of the task view."""
+        title_input = Input(id="task-view-title", disabled=True)
+        title_input.border_title = "Title"
+        yield title_input
+
+        desc_input = Input(id="task-view-desc", disabled=True)
+        desc_input.border_title = "Description"
+        yield desc_input
+
+        due_date = Input(id="task-view-due-date", disabled=True)
+        due_date.border_title = "Due Date"
+        yield due_date
+
+    def update_task(self, task: dict | None) -> None:
+        """Update the task view with the selected task's details."""
+        self.selected_task = task
+        title_input = self.query_one("#task-view-title", Input)
+        desc_input = self.query_one("#task-view-desc", Input)
+        due_date = self.query_one("#task-view-due-date", Input)
+
+        if task:
+            title_input.value = task["title"]
+            desc_input.value = (
+                task["description"] if task["description"] is not None else ""
+            )
+            due_date.value = task["due_date"] if task["due_date"] is not None else ""
+        else:
+            title_input.value = ""
+            desc_input.value = ""
+            due_date.value = ""
 
 
 class EditDialog(ModalScreen):
@@ -121,7 +153,7 @@ class EditDialog(ModalScreen):
         task = {
             "title": self.query_one("#title-input", Input).value,
             "description": self.query_one("#desc-input", Input).value,
-            "due_date": self.query_one("#due-date-input", Input).value or None,
+            "due_date": self.query_one("#due-date-input", Input).value,
             "project_name": self.query_one("#project-select", Select).value,
         }
         if self.is_edit:

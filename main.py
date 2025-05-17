@@ -78,7 +78,10 @@ class TodoApp(App):
     #due-date-input,
     #theme-select,
     #project-list,
-    #task-view {
+    #task-view,
+    #task-view-title,
+    #task-view-desc,
+    #task-view-due-date {
         border: solid $primary;
     }
     #theme-select {
@@ -87,6 +90,9 @@ class TodoApp(App):
     #task-list,
     #project-list {
         padding: 0 0 0 1;
+    }
+    #task-view-desc {
+        min-height: 4;
     }
     """
 
@@ -127,6 +133,19 @@ class TodoApp(App):
                 title_label.add_class("completed")
                 desc_label.add_class("completed")
             list_view.append(ListItem(title_label, desc_label))
+
+        # Update task view with no selection
+        self.query_one(TaskView).update_task(None)
+
+    @on(ListView.Highlighted)
+    def handle_selection(self, event: ListView.Highlighted) -> None:
+        """Handle task selection in the list view."""
+        list_view = self.query_one(ListView)
+        if event.item is not None and list_view.index is not None:
+            task = self.tasks[list_view.index]
+            self.query_one(TaskView).update_task(task)
+        else:
+            self.query_one(TaskView).update_task(None)
 
     def action_add_task(self):
         """Open the add-task dialog."""
