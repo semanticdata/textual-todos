@@ -15,7 +15,7 @@ class EditDialog(ModalScreen):
             self.is_edit = is_edit
             super().__init__()
 
-    def __init__(self, task: dict = None):
+    def __init__(self, task: dict | None = None):
         super().__init__()
         self.editing_task = task or {}
         self.is_edit = task is not None
@@ -52,9 +52,9 @@ class EditDialog(ModalScreen):
     @on(Button.Pressed, "#save-button")
     def on_save(self):
         task = {
-            "title": self.query_one("#title-input").value,
-            "description": self.query_one("#desc-input").value,
-            "due_date": self.query_one("#due-date-input").value or None,
+            "title": self.query_one("#title-input", Input).value,
+            "description": self.query_one("#desc-input", Input).value,
+            "due_date": self.query_one("#due-date-input", Input).value or None,
         }
         if self.is_edit:
             task["id"] = self.editing_task["id"]

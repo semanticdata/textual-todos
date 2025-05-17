@@ -103,13 +103,14 @@ class TodoApp(App):
 
     async def action_complete_task(self):
         """Toggle completion for selected task."""
-        if selected := self.query_one(ListView).highlighted_child:
+        if self.query_one(ListView).highlighted_child:
             index = self.query_one(ListView).index
-            task_id = self.tasks[index]["id"]
-            await self.task_store.toggle_completion(task_id)
-            self.tasks = await self.task_store.load()
-            self.update_list()
-            self.notify("Task updated!", timeout=3)
+            if index is not None:
+                task_id = self.tasks[index]["id"]
+                await self.task_store.toggle_completion(task_id)
+                self.tasks = await self.task_store.load()
+                self.update_list()
+                self.notify("Task updated!", timeout=3)
 
     def compose(self) -> ComposeResult:
         """Layout of the app."""
@@ -118,10 +119,11 @@ class TodoApp(App):
 
     def action_edit_task(self):
         """Open edit dialog for selected task."""
-        if selected := self.query_one(ListView).highlighted_child:
+        if self.query_one(ListView).highlighted_child:
             index = self.query_one(ListView).index
-            task = self.tasks[index]
-            self.push_screen(EditDialog(task))
+            if index is not None:
+                task = self.tasks[index]
+                self.push_screen(EditDialog(task))
 
     @on(EditDialog.Save)
     async def handle_save(self, event: EditDialog.Save):
