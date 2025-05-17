@@ -38,7 +38,7 @@ class DeleteConfirmDialog(ModalScreen):
         """Compose the dialog UI."""
         with Vertical(id="delete-dialog"):
             yield Label(
-                f"Are you sure you want to delete task: {self.task_title}?",
+                f'Are you sure you want to delete task:\n\n"{self.task_title}?"',
                 id="delete-message",
             )
             with Horizontal(classes="dialog-buttons"):

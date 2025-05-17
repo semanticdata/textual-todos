@@ -1,8 +1,8 @@
 Screen {
     layout: grid;
     grid-size: 2 2;
-    grid-columns: 7fr 4fr;
-    grid-rows: 2fr 3fr;
+    grid-columns: 2fr 1fr;
+    grid-rows: 1fr 2fr;
 }
 
 #task-list {
@@ -19,8 +19,6 @@ Screen {
 }
 
 .task-table > .datatable--header {
-    background: $primary;
-    color: $text;
     text-style: bold;
 }
 
@@ -60,9 +58,8 @@ Button.error {
     background: $surface;
 }
 
-#question {
-    padding: 1;
-    text-align: center;
+#delete-message {
+    padding: 1 2;
 }
 
 #fields {
@@ -90,8 +87,17 @@ Button.error {
     margin: 1 0;
 }
 
-#task-list,
+#task-table,
+#task-view-title,
+#task-view-desc,
+#task-view-due-date,
+#task-view-project,
+#task-view-status,
 #project-list {
+    background: $background;
+}
+
+.project-label {
     padding: 0 0 0 1;
 }
 
@@ -106,10 +112,4 @@ Button.error {
 
 Button {
     border: none;
-}
-
-.header {
-    text-style: bold;
-    background: $primary;
-    color: $text;
 }
