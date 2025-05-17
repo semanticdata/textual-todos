@@ -135,6 +135,8 @@ class TaskStore:
                     task["due_date"],
                 ),
             )
+            if cursor.lastrowid is None:
+                raise sqlite3.Error("Failed to insert task: no row ID returned")
             return cursor.lastrowid
 
     async def toggle_completion(self, task_id: int) -> Dict:
@@ -252,11 +254,14 @@ class TaskStore:
         completed: Optional[bool] = None,
     ) -> List[Dict]:
         """Search tasks with filtering options."""
-        if isinstance(priority, str) and priority:
-            try:
-                priority = Priority(priority.lower())
-            except ValueError:
-                raise TaskValidationError(f"Invalid priority value: {priority}")
+        if isinstance(priority, str):
+            if priority.strip():
+                try:
+                    priority = Priority(priority.lower())
+                except ValueError:
+                    raise TaskValidationError(f"Invalid priority value: {priority}")
+            else:
+                priority = None
 
         try:
             return await asyncio.to_thread(
