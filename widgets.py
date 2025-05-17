@@ -224,7 +224,7 @@ class SettingsDialog(ModalScreen):
             selectTheme.border_title = "Select Theme"
             yield selectTheme
             with Horizontal(id="buttons"):
-                yield Button("Cancel", id="cancel-button")
+                yield Button("Cancel", id="cancel-button", variant="error")
                 yield Button("Save", id="save-button", variant="primary")
 
     @on(Button.Pressed, "#save-button")

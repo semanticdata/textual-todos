@@ -15,92 +15,13 @@ from widgets import (
 class TodoApp(App):
     """Todo application with working dialog and strikethrough."""
 
-    CSS = """
-    Screen {
-        layout: grid;
-        grid-size: 2 2;
-        grid-columns: 3fr 2fr;
-        grid-rows: 1fr 1fr;
-    }
-    #task-list {
-        border: solid $primary;
-        height: 1fr;
-        scrollbar-gutter: stable;
-        row-span: 2;
-    }
-    ListItem {
-        layout: grid;
-        grid-size: 2;
-        grid-columns: 1fr 2fr;
-    }
-    ListItem:hover {
-        background: $boost;
-    }
-    ListItem .completed {
-        text-style: strike;
-        color: $text-muted;
-    }
-    ListItem > Label {
-        width: 100%;
-        height: 100%;
-    }
-    #buttons {
-        height: auto;
-        padding: 1;
-        layout: horizontal;
-        align: right middle;
-    }
-    Button.error {
-        background: $error;
-        color: auto;
-    }
-    #buttons > Button:last-child {
-        margin-left: 2;
-    }
-    #edit-dialog,
-    #delete-dialog,
-    #settings-dialog {
-        width: 60;
-        height: 1fr;
-        border: solid $primary;
-        background: $surface;
-    }
-    #question {
-        padding: 1;
-        text-align: center;
-    }
-    #fields {
-        height: auto;
-        padding: 1;
-    }
-    #title-input,
-    #desc-input,
-    #due-date-input,
-    #theme-select,
-    #project-list,
-    #task-view,
-    #task-view-title,
-    #task-view-desc,
-    #task-view-due-date {
-        border: solid $primary;
-    }
-    #theme-select {
-        margin: 1 0;
-    }
-    #task-list,
-    #project-list {
-        padding: 0 0 0 1;
-    }
-    #task-view-desc {
-        min-height: 4;
-    }
-    """
+    CSS_PATH = "style.tcss"
 
     BINDINGS = [
-        ("a", "add_task", "Add"),
-        ("e", "edit_task", "Edit"),
-        ("d", "delete_task", "Delete"),
-        ("c", "complete_task", "Complete"),
+        ("a", "add_task", "Add Task"),
+        ("e", "edit_task", "Edit Task"),
+        ("d", "delete_task", "Delete Task"),
+        ("c", "complete_task", "Complete Task"),
         ("s", "settings", "Settings"),
         ("q", "quit", "Quit"),
     ]
@@ -123,16 +44,22 @@ class TodoApp(App):
         list_view = self.query_one(ListView)
         list_view.border_title = "Tasks"
         list_view.clear()
+
+        title_header = Label("[b]Title[/b]", classes="header")
+        desc_header = Label("[b]Description[/b]", classes="header")
+        due_header = Label("[b]Due Date[/b]", classes="header")
+        list_view.append(ListItem(title_header, desc_header, due_header))
+
         for task in self.tasks:
             title_text = task["title"]
-            if task.get("due_date"):
-                title_text += f" (Due: {task['due_date']})"
             title_label = Label(title_text)
             desc_label = Label(task["description"])
+            due_date_label = Label(task["due_date"])
             if task["completed"]:
                 title_label.add_class("completed")
                 desc_label.add_class("completed")
-            list_view.append(ListItem(title_label, desc_label))
+                due_date_label.add_class("completed")
+            list_view.append(ListItem(title_label, desc_label, due_date_label))
 
         # Update task view with no selection
         self.query_one(TaskView).update_task(None)
@@ -141,8 +68,14 @@ class TodoApp(App):
     def handle_selection(self, event: ListView.Highlighted) -> None:
         """Handle task selection in the list view."""
         list_view = self.query_one(ListView)
-        if event.item is not None and list_view.index is not None:
-            task = self.tasks[list_view.index]
+        # Check if index is valid (greater than 0 because 0 is the header)
+        if (
+            event.item is not None
+            and list_view.index is not None
+            and list_view.index > 0
+        ):
+            # Subtract 1 from index to account for header row
+            task = self.tasks[list_view.index - 1]
             self.query_one(TaskView).update_task(task)
         else:
             self.query_one(TaskView).update_task(None)
