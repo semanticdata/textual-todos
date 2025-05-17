@@ -219,7 +219,6 @@ class SettingsDialog(ModalScreen):
         settingsDialog = Vertical(id="settings-dialog")
         settingsDialog.border_title = "Settings"
         with settingsDialog:
-            # yield Label("Settings go here")
             selectTheme = Select(options=self.selectThemeList, id="theme-select")
             selectTheme.border_title = "Select Theme"
             yield selectTheme
