@@ -73,15 +73,6 @@ class EditDialog(ModalScreen):
             title_input.border_title = "Title"
             yield title_input
 
-            # Task description
-            desc_input = Input(
-                id="edit-desc",
-                placeholder="Task description (optional)",
-                value=self.editing_task.get("description", ""),
-            )
-            desc_input.border_title = "Description"
-            yield desc_input
-
             # Due date
             due_date = Input(
                 id="edit-due-date",
@@ -112,6 +103,15 @@ class EditDialog(ModalScreen):
             )
             priority_select.border_title = "Priority"
             yield priority_select
+
+            # Task description
+            desc_input = Input(
+                id="edit-desc",
+                placeholder="Task description (optional)",
+                value=self.editing_task.get("description", ""),
+            )
+            desc_input.border_title = "Description"
+            yield desc_input
 
             # Buttons
             with Horizontal(classes="dialog-buttons"):

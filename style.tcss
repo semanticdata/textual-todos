@@ -101,10 +101,6 @@ Button.error {
 
 #edit-desc,
 #task-view-desc {
-    min-height: 5;
-}
-
-#task-view-desc {
     height: 1fr;
 }
 
