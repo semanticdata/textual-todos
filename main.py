@@ -3,7 +3,13 @@ from textual.app import App, ComposeResult
 from textual.widgets import Footer, Header, Label, ListItem, ListView
 
 from models import TaskStore
-from widgets import DeleteConfirmDialog, EditDialog, ProjectList, SettingsDialog
+from widgets import (
+    DeleteConfirmDialog,
+    EditDialog,
+    ProjectList,
+    SettingsDialog,
+    TaskView,
+)
 
 
 class TodoApp(App):
@@ -146,6 +152,7 @@ class TodoApp(App):
         yield Header()
         yield ListView()
         yield ProjectList(["Project 1", "Project 2", "Project 3"])
+        yield TaskView()
         yield Footer()
 
     def action_edit_task(self):

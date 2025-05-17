@@ -3,7 +3,15 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.message import Message
 from textual.screen import ModalScreen
-from textual.widgets import Button, Input, Label, ListItem, ListView, Select
+from textual.widgets import (
+    Button,
+    Input,
+    Label,
+    ListItem,
+    ListView,
+    Placeholder,
+    Select,
+)
 
 
 class ProjectList(ListView):
@@ -18,6 +26,15 @@ class ProjectList(ListView):
     def compose(self) -> ComposeResult:
         for project in self.projects:
             yield ListItem(Label(project, classes="project-label"))
+
+
+class TaskView(Placeholder):
+    """View for displaying additional task information and making quick edits."""
+
+    def __init__(self):
+        super().__init__()
+        self.id = "task-view"
+        self.border_title = "Task Details"
 
 
 class EditDialog(ModalScreen):
