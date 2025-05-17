@@ -1,6 +1,6 @@
 from textual import on
 from textual.app import App, ComposeResult
-from textual.widgets import Footer, Label, ListItem, ListView
+from textual.widgets import Footer, Label, ListItem, ListView, Header
 
 from models import TaskStore
 from widgets import DeleteConfirmDialog, EditDialog
@@ -78,6 +78,9 @@ class TodoApp(App):
         self.tasks = []
 
     async def on_mount(self) -> None:
+        """Initialize the app and load tasks."""
+        self.title = "Textual Todos"
+        self.sub_title = "A simple Todo app in your terminal"
         """Load tasks when the app starts."""
         self.tasks = await self.task_store.load()
         self.update_list()
@@ -114,6 +117,7 @@ class TodoApp(App):
 
     def compose(self) -> ComposeResult:
         """Layout of the app."""
+        yield Header()
         yield ListView()
         yield Footer()
 
