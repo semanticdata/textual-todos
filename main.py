@@ -76,7 +76,9 @@ class TodoApp(App):
     #title-input,
     #desc-input,
     #due-date-input,
-    #theme-select {
+    #theme-select,
+    #project-list,
+    #task-view {
         border: solid $primary;
     }
     #theme-select {
@@ -85,11 +87,6 @@ class TodoApp(App):
     #task-list,
     #project-list {
         padding: 0 0 0 1;
-    }
-    #project-list {
-        border: solid $primary;
-        height: 1fr;
-        scrollbar-gutter: stable;
     }
     """
 
