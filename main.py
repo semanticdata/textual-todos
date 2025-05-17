@@ -3,22 +3,29 @@ from textual.app import App, ComposeResult
 from textual.widgets import Footer, Header, Label, ListItem, ListView
 
 from models import TaskStore
-from widgets import DeleteConfirmDialog, EditDialog, SettingsDialog
+from widgets import DeleteConfirmDialog, EditDialog, ProjectList, SettingsDialog
 
 
 class TodoApp(App):
     """Todo application with working dialog and strikethrough."""
 
     CSS = """
-    ListView {
+    Screen {
+        layout: grid;
+        grid-size: 2 2;
+        grid-columns: 3fr 2fr;
+        grid-rows: 1fr 1fr;
+    }
+    #task-list {
         border: solid $primary;
         height: 1fr;
         scrollbar-gutter: stable;
+        row-span: 2;
     }
     ListItem {
         layout: grid;
         grid-size: 2;
-        grid-columns: 1fr 3fr;
+        grid-columns: 1fr 2fr;
     }
     ListItem:hover {
         background: $boost;
@@ -69,6 +76,15 @@ class TodoApp(App):
     #theme-select {
         margin: 1 0;
     }
+    #task-list,
+    #project-list {
+        padding: 0 0 0 1;
+    }
+    #project-list {
+        border: solid $primary;
+        height: 1fr;
+        scrollbar-gutter: stable;
+    }
     """
 
     BINDINGS = [
@@ -96,6 +112,8 @@ class TodoApp(App):
     def update_list(self):
         """Refresh the ListView with current tasks."""
         list_view = self.query_one(ListView)
+        list_view.border_title = "Tasks"
+        list_view.id = "task-list"
         list_view.clear()
         for task in self.tasks:
             title_text = task["title"]
@@ -127,6 +145,7 @@ class TodoApp(App):
         """Layout of the app."""
         yield Header()
         yield ListView()
+        yield ProjectList(["Project 1", "Project 2", "Project 3"])
         yield Footer()
 
     def action_edit_task(self):

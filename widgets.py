@@ -3,7 +3,21 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.message import Message
 from textual.screen import ModalScreen
-from textual.widgets import Button, Input, Label, Select
+from textual.widgets import Button, Input, Label, ListItem, ListView, Select
+
+
+class ProjectList(ListView):
+    """List of projects."""
+
+    def __init__(self, projects: list[str]):
+        super().__init__()
+        self.projects = projects
+        self.border_title = "Projects"
+        self.id = "project-list"
+
+    def compose(self) -> ComposeResult:
+        for project in self.projects:
+            yield ListItem(Label(project, classes="project-label"))
 
 
 class EditDialog(ModalScreen):
