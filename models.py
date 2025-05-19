@@ -43,9 +43,7 @@ class TaskStore:
         }
 
     @staticmethod
-    def validate_task(
-        title: str, description: str = "", due_date: Optional[str] = None
-    ) -> Optional[str]:
+    def validate_task(title: str, description: str = "", due_date: Optional[str] = None) -> Optional[str]:
         """Validate task data.
 
         Args:

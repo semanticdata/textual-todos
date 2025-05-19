@@ -36,7 +36,7 @@ class TaskList(Container):
         """Configure the table after it's mounted."""
         table = self.query_one(DataTable)
         table.cursor_type = "row"
-        table.add_class("task-table")
+        # table.add_class("task-table")
 
     def update_table(self, tasks: list[dict]) -> None:
         """Update the table with the given tasks.

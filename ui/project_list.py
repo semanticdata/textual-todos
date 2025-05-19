@@ -33,9 +33,7 @@ class ProjectList(ListView):
         """Refresh the project list view."""
         self.clear()
         for project in self.projects:
-            self.append(
-                ListItem(Label(project["name"].title(), classes="project-label"))
-            )
+            self.append(ListItem(Label(project["name"].title(), classes="project-label")))
 
     async def add_project(self, name: str) -> bool:
         """Add a new project.

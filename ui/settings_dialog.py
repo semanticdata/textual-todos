@@ -43,9 +43,7 @@ class SettingsDialog(ModalScreen):
             theme_select = Select(
                 self.selectThemeList,
                 id="theme-select",
-                value=self.app.dark_theme
-                if hasattr(self.app, "dark_theme")
-                else "textual-dark",
+                value=self.app.dark_theme if hasattr(self.app, "dark_theme") else "textual-dark",
             )
             theme_select.border_title = "Theme"
             yield theme_select

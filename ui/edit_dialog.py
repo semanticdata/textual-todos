@@ -46,9 +46,7 @@ class EditDialog(ModalScreen):
         """Load projects when dialog is mounted."""
         try:
             # Load all projects except 'Inbox' (already added in __init__)
-            projects = db.fetch_all(
-                "SELECT name FROM projects WHERE name != 'Inbox' ORDER BY name"
-            )
+            projects = db.fetch_all("SELECT name FROM projects WHERE name != 'Inbox' ORDER BY name")
             self.project_list.extend((p["name"], p["name"]) for p in projects)
 
             # Update the select widget if it exists

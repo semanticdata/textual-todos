@@ -122,9 +122,7 @@ class DatabaseConnection:
         with self.get_connection() as conn:
             return conn.execute(query, params)
 
-    def fetch_all(
-        self, query: str, params: Tuple[Any, ...] = ()
-    ) -> List[Dict[str, Any]]:
+    def fetch_all(self, query: str, params: Tuple[Any, ...] = ()) -> List[Dict[str, Any]]:
         """Execute a query and fetch all results.
 
         Args:
@@ -138,9 +136,7 @@ class DatabaseConnection:
             cursor = conn.execute(query, params)
             return cursor.fetchall()
 
-    def fetch_one(
-        self, query: str, params: Tuple[Any, ...] = ()
-    ) -> Optional[Dict[str, Any]]:
+    def fetch_one(self, query: str, params: Tuple[Any, ...] = ()) -> Optional[Dict[str, Any]]:
         """Execute a query and fetch one result.
 
         Args:

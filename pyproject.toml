@@ -4,7 +4,16 @@ version = "0.1.0"
 description = "A simple todo list app for the terminal built with Textual."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    "textual>=3.2.0",
-    "textual-dev>=1.7.0",
-]
+dependencies = ["textual>=3.2.0"]
+
+[dependency-groups]
+dev = ["ruff>=0.11.10", "textual-dev>=1.7.0"]
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+target-version = "py312"
+lint.select = ["E", "F", "I"]
+lint.ignore = []
+lint.fixable = ["ALL"]
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"

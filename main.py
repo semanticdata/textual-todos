@@ -79,8 +79,8 @@ class TodoApp(App):
     def compose(self) -> ComposeResult:
         """Layout of the app."""
         yield Header()
-        yield TaskList()
         yield ProjectList()
+        yield TaskList()
         yield TaskView()
         yield Footer()
 
@@ -106,9 +106,7 @@ class TodoApp(App):
                 event.task["title"],
                 event.task["description"],
                 due_date=event.task["due_date"],
-                project=event.task["project_name"]
-                if "project_name" in event.task
-                else "inbox",
+                project=event.task["project_name"] if "project_name" in event.task else "inbox",
             )
 
         if "error" in result:

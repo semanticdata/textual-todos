@@ -1,29 +1,20 @@
 Screen {
   layout: grid;
-  grid-size: 2 2;
-  grid-columns: 2fr 1fr;
-  grid-rows: 1fr 2fr;
+  grid-size: 3 1;
+  grid-columns: 1fr 3fr 2fr;
+  grid-rows: 1fr;
 }
 
 #task-list {
   border: solid $primary;
   height: 1fr;
   scrollbar-gutter: stable;
-  row-span: 2;
+  # row-span: 2;
   padding: 0;
 }
 
-.task-table {
-  width: 100%;
+#task-table {
   height: 100%;
-}
-
-.task-table > .datatable--header {
-  text-style: bold;
-}
-
-.task-table > .datatable--row > .datatable--cell {
-  padding: 0;
 }
 
 .completed {
@@ -38,21 +29,24 @@ Screen {
   align: right middle;
 }
 
+.dialog-buttons > Button:last-child {
+  margin-left: 2;
+}
+
+Button {
+  border: none;
+}
+
 Button.error {
   background: $error;
   color: auto;
 }
 
-.dialog-buttons > Button:last-child {
-  margin-left: 2;
-}
-
 #edit-dialog,
 #delete-dialog,
 #settings-dialog {
-  width: 60;
   height: 100%;
-  row-span: 2;
+  column-span: 2;
   border: solid $primary;
   background: $surface;
 }
@@ -82,10 +76,6 @@ Button.error {
   border: solid $primary;
 }
 
-#theme-select {
-  margin: 1 0;
-}
-
 #task-table,
 #task-view-title,
 #task-view-desc,
@@ -100,15 +90,11 @@ Button.error {
   padding: 0 0 0 1;
 }
 
-#task-view {
-  height: 1fr;
-}
-
 #edit-desc,
 #task-view-desc {
   height: 1fr;
 }
 
-Button {
-  border: none;
+#theme-select {
+  margin: 1 0;
 }

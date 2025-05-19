@@ -74,9 +74,7 @@ class TaskView(Vertical):
             status_input.value = status
 
             # Style based on completion status
-            status_input.styles.color = (
-                "green" if task.get("completed", False) else "yellow"
-            )
+            status_input.styles.color = "green" if task.get("completed", False) else "yellow"
         else:
             # Clear all fields
             title_input.value = ""
