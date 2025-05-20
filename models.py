@@ -58,6 +58,8 @@ class TaskStore:
             return "Title cannot be empty"
         if len(title) > MAX_TITLE_LENGTH:
             return f"Title cannot exceed {MAX_TITLE_LENGTH} characters"
+        if description is None:
+            description = ""
         if len(description) > MAX_DESCRIPTION_LENGTH:
             return f"Description cannot exceed {MAX_DESCRIPTION_LENGTH} characters"
         if due_date:
@@ -122,9 +124,12 @@ class TaskStore:
         """
         if isinstance(priority, str):
             try:
-                priority = Priority(priority.lower())
+                priority_obj = Priority(priority.lower())
             except ValueError:
                 return {"error": f"Invalid priority value: {priority}"}
+            priority_value = priority_obj
+        else:
+            priority_value = priority.value
 
         validation_error = self.validate_task(title, description, due_date)
         if validation_error:
@@ -135,7 +140,7 @@ class TaskStore:
             "title": title.strip(),
             "description": description.strip(),
             "completed": False,
-            "priority": priority.value,
+            "priority": str(priority_value),
             "created_at": now,
             "modified_at": now,
             "due_date": due_date if due_date and due_date.strip() else None,

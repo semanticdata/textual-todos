@@ -93,11 +93,12 @@ class TaskView(Vertical):
 
     @on(Input.Changed, "#task-view-title,#task-view-desc,#task-view-due-date")
     def on_input_changed(self, event: Input.Changed) -> None:
-        if not self.selected_task:
-            return
         title = self.query_one("#task-view-title", Input).value.strip()
         description = self.query_one("#task-view-desc", Input).value.strip()
         due_date = self.query_one("#task-view-due-date", Input).value.strip()
+        if self.selected_task is None:
+            # Do not auto-save for new tasks on change
+            return
         orig_title = self.selected_task.get("title", "").strip()
         orig_description = (self.selected_task.get("description") or "").strip()
         orig_due_date = (self.selected_task.get("due_date") or "").strip()
@@ -110,3 +111,36 @@ class TaskView(Vertical):
             "due_date": due_date if due_date else None,
         }
         self.post_message(self.Save(task_data))
+
+    @on(Input.Submitted, "#task-view-title,#task-view-desc,#task-view-due-date")
+    @on(Input.Blurred, "#task-view-title,#task-view-desc,#task-view-due-date")
+    def on_input_submitted_or_blurred(self, event: Input.Submitted | Input.Blurred) -> None:
+        if self.selected_task is not None:
+            return  # Only handle new tasks here
+        title = self.query_one("#task-view-title", Input).value.strip()
+        description = self.query_one("#task-view-desc", Input).value.strip()
+        due_date = self.query_one("#task-view-due-date", Input).value.strip()
+        if title:
+            task_data: TaskData = {
+                "title": title,
+                "description": description if description else None,
+                "due_date": due_date if due_date else None,
+                "project_name": "Inbox",
+            }
+            self.post_message(self.Save(task_data))
+
+    def clear_and_focus(self) -> None:
+        """Clear all input fields and focus the title input for new task creation."""
+        title_input = self.query_one("#task-view-title", Input)
+        desc_input = self.query_one("#task-view-desc", Input)
+        due_date = self.query_one("#task-view-due-date", Input)
+        project_input = self.query_one("#task-view-project", Input)
+        status_input = self.query_one("#task-view-status", Input)
+        title_input.value = ""
+        desc_input.value = ""
+        due_date.value = ""
+        project_input.value = ""
+        status_input.value = ""
+        self.selected_task = None
+        self.refresh()
+        title_input.focus()

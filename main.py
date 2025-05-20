@@ -77,8 +77,10 @@ class TodoApp(App):
             self.query_one(TaskView).update_task(self.tasks[row_idx])
 
     def action_add_task(self):
-        """Open the add-task dialog."""
-        pass  # Optionally implement a new add-task flow in TaskView
+        """Focus TaskView for adding a new task."""
+        task_view = self.query_one(TaskView)
+        task_view.clear_and_focus()
+        # Optionally, you could set a flag here if needed for new task mode
 
     async def action_complete_task(self):
         """Toggle completion for selected task."""
@@ -101,29 +103,54 @@ class TodoApp(App):
 
     @on(TaskView.Save)
     async def handle_taskview_save(self, event: TaskView.Save):
-        result = await self.task_store.update_task(
-            event.task["id"],
-            event.task["title"],
-            event.task["description"],
-            due_date=event.task["due_date"],
-        )
-        if "error" in result:
-            self.notify(result["error"], severity="error", timeout=3)
-            return
-        self.tasks = await self.task_store.load()
-        # Find the updated task in the new list
-        updated_task = next((t for t in self.tasks if t["id"] == event.task["id"]), None)
-        # Update the list and re-select the task
-        task_list = self.query_one(TaskList)
-        task_list.update_table(self.tasks)
-        if updated_task:
-            # Find the row index for the updated task
+        # If there is no id, this is a new task
+        if not event.task.get("id"):
+            # Create new task
+            result = await self.task_store.add_task(
+                event.task["title"],
+                event.task.get("description") or "",
+                priority=event.task.get("priority", "medium"),
+                due_date=event.task.get("due_date"),
+                project=event.task.get("project_name", "Inbox"),
+            )
+            if "error" in result:
+                self.notify(result["error"], severity="error", timeout=3)
+                return
+            self.tasks = await self.task_store.load()
+            self.update_list()
+            # Focus the new task in the list
+            task_list = self.query_one(TaskList)
             for idx, t in enumerate(self.tasks):
-                if t["id"] == updated_task["id"]:
+                if t["id"] == result["id"]:
                     table = task_list.query_one("#task-table")
                     table.focused_cell = (idx, 0)
                     break
-            self.query_one(TaskView).update_task(updated_task)
+            self.query_one(TaskView).update_task(result)
+        else:
+            # Update existing task
+            result = await self.task_store.update_task(
+                event.task["id"],
+                event.task["title"],
+                event.task["description"],
+                due_date=event.task["due_date"],
+            )
+            if "error" in result:
+                self.notify(result["error"], severity="error", timeout=3)
+                return
+            self.tasks = await self.task_store.load()
+            # Find the updated task in the new list
+            updated_task = next((t for t in self.tasks if t["id"] == event.task["id"]), None)
+            # Update the list and re-select the task
+            task_list = self.query_one(TaskList)
+            task_list.update_table(self.tasks)
+            if updated_task:
+                # Find the row index for the updated task
+                for idx, t in enumerate(self.tasks):
+                    if t["id"] == updated_task["id"]:
+                        table = task_list.query_one("#task-table")
+                        table.focused_cell = (idx, 0)
+                        break
+                self.query_one(TaskView).update_task(updated_task)
 
     async def action_delete_task(self):
         """Handle task deletion flow."""
