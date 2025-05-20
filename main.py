@@ -6,7 +6,6 @@ from textual.widgets import Footer, Header
 from models import TaskStore
 from ui import (
     DeleteConfirmDialog,
-    EditDialog,
     ProjectList,
     SettingsDialog,
     TaskList,
@@ -22,7 +21,6 @@ class TodoApp(App):
 
     BINDINGS = [
         ("a", "add_task", "Add Task"),
-        ("e", "edit_task", "Edit Task"),
         ("d", "delete_task", "Delete Task"),
         ("c", "complete_task", "Complete Task"),
         ("s", "settings", "Settings"),
@@ -53,17 +51,34 @@ class TodoApp(App):
         """Refresh the task list with current tasks."""
         task_list = self.query_one(TaskList)
         task_list.update_table(self.tasks)
-        # Update task view with no selection
-        self.query_one(TaskView).update_task(None)
+        # Focus the first task if there is one
+        if self.tasks:
+            table = task_list.query_one("#task-table")
+            table.focused_cell = (0, 0)
+            table.focus()
+            self.query_one(TaskView).update_task(self.tasks[0])
+        else:
+            # Update task view with no selection
+            self.query_one(TaskView).update_task(None)
 
     @on(TaskList.Selected)
     def handle_task_selected(self, event: TaskList.Selected) -> None:
         """Handle task selection in the task list."""
         self.query_one(TaskView).update_task(event.task)
 
+    @on("data_table.row_highlighted")
+    def handle_row_highlighted(self, event) -> None:
+        """Update TaskView when the row highlight (cursor) changes in the DataTable."""
+        # Find the TaskList and DataTable
+        task_list = self.query_one(TaskList)
+        table = task_list.query_one("#task-table")
+        row_idx = table.cursor_row
+        if row_idx is not None and 0 <= row_idx < len(self.tasks):
+            self.query_one(TaskView).update_task(self.tasks[row_idx])
+
     def action_add_task(self):
         """Open the add-task dialog."""
-        self.push_screen(EditDialog())
+        pass  # Optionally implement a new add-task flow in TaskView
 
     async def action_complete_task(self):
         """Toggle completion for selected task."""
@@ -84,41 +99,31 @@ class TodoApp(App):
         yield TaskView()
         yield Footer()
 
-    def action_edit_task(self):
-        """Open edit dialog for selected task."""
-        task_list = self.query_one(TaskList)
-        selected_task = task_list.get_selected_task()
-        if selected_task:
-            self.push_screen(EditDialog(selected_task))
-
-    @on(EditDialog.Save)
-    async def handle_save(self, event: EditDialog.Save):
-        """Handle both new tasks and updates."""
-        if event.is_edit:
-            result = await self.task_store.update_task(
-                event.task["id"],
-                event.task["title"],
-                event.task["description"],
-                due_date=event.task["due_date"],
-            )
-        else:
-            result = await self.task_store.add_task(
-                event.task["title"],
-                event.task["description"],
-                due_date=event.task["due_date"],
-                project=event.task["project_name"] if "project_name" in event.task else "inbox",
-            )
-
+    @on(TaskView.Save)
+    async def handle_taskview_save(self, event: TaskView.Save):
+        result = await self.task_store.update_task(
+            event.task["id"],
+            event.task["title"],
+            event.task["description"],
+            due_date=event.task["due_date"],
+        )
         if "error" in result:
             self.notify(result["error"], severity="error", timeout=3)
             return
-
-        # Reload tasks from database to ensure UI is in sync
         self.tasks = await self.task_store.load()
-        self.update_list()
-
-        message = "Task updated!" if event.is_edit else "Task saved!"
-        self.notify(message, timeout=3)
+        # Find the updated task in the new list
+        updated_task = next((t for t in self.tasks if t["id"] == event.task["id"]), None)
+        # Update the list and re-select the task
+        task_list = self.query_one(TaskList)
+        task_list.update_table(self.tasks)
+        if updated_task:
+            # Find the row index for the updated task
+            for idx, t in enumerate(self.tasks):
+                if t["id"] == updated_task["id"]:
+                    table = task_list.query_one("#task-table")
+                    table.focused_cell = (idx, 0)
+                    break
+            self.query_one(TaskView).update_task(updated_task)
 
     async def action_delete_task(self):
         """Handle task deletion flow."""

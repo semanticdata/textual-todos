@@ -2,8 +2,10 @@
 
 from typing import Optional
 
+from textual import on
 from textual.app import ComposeResult
 from textual.containers import Vertical
+from textual.message import Message
 from textual.widgets import Input
 
 from .task_types import TaskData
@@ -11,6 +13,11 @@ from .task_types import TaskData
 
 class TaskView(Vertical):
     """View for displaying additional task information and making quick edits."""
+
+    class Save(Message):
+        def __init__(self, task: TaskData):
+            self.task = task
+            super().__init__()
 
     def __init__(self):
         """Initialize the task view."""
@@ -23,12 +30,12 @@ class TaskView(Vertical):
         """Compose the task view UI."""
         with Vertical(id="task-details"):
             # Task title
-            title_input = Input(id="task-view-title", disabled=True)
+            title_input = Input(id="task-view-title")
             title_input.border_title = "Title"
             yield title_input
 
             # Due date
-            due_date = Input(id="task-view-due-date", disabled=True)
+            due_date = Input(id="task-view-due-date")
             due_date.border_title = "Due Date"
             yield due_date
 
@@ -43,7 +50,7 @@ class TaskView(Vertical):
             yield status_input
 
             # Task description
-            desc_input = Input(id="task-view-desc", disabled=True)
+            desc_input = Input(id="task-view-desc")
             desc_input.border_title = "Description"
             yield desc_input
 
@@ -65,8 +72,8 @@ class TaskView(Vertical):
         if task:
             # Update fields with task data
             title_input.value = task.get("title", "")
-            desc_input.value = task.get("description", "") or "No description"
-            due_date.value = task.get("due_date", "") or "No due date"
+            desc_input.value = task.get("description") or ""
+            due_date.value = task.get("due_date") or ""
             project_input.value = task.get("project_name", "Inbox").title()
 
             # Set status
@@ -82,3 +89,24 @@ class TaskView(Vertical):
             due_date.value = ""
             project_input.value = ""
             status_input.value = ""
+        self.refresh()
+
+    @on(Input.Changed, "#task-view-title,#task-view-desc,#task-view-due-date")
+    def on_input_changed(self, event: Input.Changed) -> None:
+        if not self.selected_task:
+            return
+        title = self.query_one("#task-view-title", Input).value.strip()
+        description = self.query_one("#task-view-desc", Input).value.strip()
+        due_date = self.query_one("#task-view-due-date", Input).value.strip()
+        orig_title = self.selected_task.get("title", "").strip()
+        orig_description = (self.selected_task.get("description") or "").strip()
+        orig_due_date = (self.selected_task.get("due_date") or "").strip()
+        if title == orig_title and description == orig_description and due_date == orig_due_date:
+            return  # No changes, do not post Save
+        task_data: TaskData = {
+            **self.selected_task,
+            "title": title,
+            "description": description if description else None,
+            "due_date": due_date if due_date else None,
+        }
+        self.post_message(self.Save(task_data))

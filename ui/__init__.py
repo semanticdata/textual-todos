@@ -1,7 +1,6 @@
 """UI components for the Textual To-Do application."""
 
 from .delete_dialog import DeleteConfirmDialog
-from .edit_dialog import EditDialog
 from .project_list import ProjectList
 from .settings_dialog import SettingsDialog, ThemeChanged
 from .task_list import TaskList
@@ -13,7 +12,6 @@ __all__ = [
     "ProjectList",
     "TaskList",
     "TaskView",
-    "EditDialog",
     "DeleteConfirmDialog",
     "SettingsDialog",
     "ThemeChanged",
