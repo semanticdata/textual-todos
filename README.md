@@ -13,7 +13,5 @@ A simple todo list app for the terminal built with Textual.
 ## Todo
 
 - Projects
-  - [ ] Add a way to CRUD projects
-- Task Details Widget
-  - [ ] Make task details widget editable
-  - [ ] Add project selection under task details
+  - [ ] Way to CRUD projects
+  - [ ] Change Task List based on select project
