@@ -1,3 +1,5 @@
+from typing import Optional
+
 from textual import on
 from textual.app import App, ComposeResult
 from textual.message import Message
@@ -47,40 +49,69 @@ class TodoApp(App):
         self.tasks = await self.task_store.load()
         self.update_list()
 
-    def update_list(self):
-        """Refresh the task list with current tasks."""
+    def update_list(self, focus_task_id: Optional[int] = None):
+        """Refresh the task list with current tasks.
+
+        Args:
+            focus_task_id: Optional task ID to focus after update
+        """
         task_list = self.query_one(TaskList)
-        task_list.update_table(self.tasks)
-        # Focus the first task if there is one
-        if self.tasks:
-            table = task_list.query_one("#task-table")
-            table.focused_cell = (0, 0)
-            table.focus()
-            self.query_one(TaskView).update_task(self.tasks[0])
-        else:
-            # Update task view with no selection
-            self.query_one(TaskView).update_task(None)
+        task_view = self.query_one(TaskView)
+
+        # Update the task list
+        task_list.update_table(self.tasks, focus_task_id)
+
+        # If we have tasks but none is selected, select the first one
+        if self.tasks and focus_task_id is None:
+            task_view.update_task(self.tasks[0])
+        # If we have a specific task to focus
+        elif focus_task_id is not None:
+            task = next((t for t in self.tasks if t["id"] == focus_task_id), None)
+            if task:
+                task_view.update_task(task)
+        # No tasks
+        elif not self.tasks:
+            task_view.update_task(None)
+
+        # Ensure the task list has focus by default if not editing
+        if not task_view._is_editing:
+            task_list.focus()
 
     @on(TaskList.Selected)
     def handle_task_selected(self, event: TaskList.Selected) -> None:
         """Handle task selection in the task list."""
-        self.query_one(TaskView).update_task(event.task)
+        task_view = self.query_one(TaskView)
+        task_view.update_task(event.task)
+        # Keep focus on the task list unless we're in edit mode
+        if not task_view._is_editing:
+            self.query_one(TaskList).focus()
 
     @on("data_table.row_highlighted")
     def handle_row_highlighted(self, event) -> None:
         """Update TaskView when the row highlight (cursor) changes in the DataTable."""
-        # Find the TaskList and DataTable
-        task_list = self.query_one(TaskList)
-        table = task_list.query_one("#task-table")
-        row_idx = table.cursor_row
-        if row_idx is not None and 0 <= row_idx < len(self.tasks):
-            self.query_one(TaskView).update_task(self.tasks[row_idx])
+        task_view = self.query_one(TaskView)
+        # Only update if we're not currently editing
+        if not task_view._is_editing:
+            # Find the TaskList and DataTable
+            task_list = self.query_one(TaskList)
+            table = task_list.query_one("#task-table")
+            row_idx = table.cursor_row
+            if row_idx is not None and 0 <= row_idx < len(self.tasks):
+                task_view.update_task(self.tasks[row_idx])
 
     def action_add_task(self):
         """Focus TaskView for adding a new task."""
         task_view = self.query_one(TaskView)
+        task_list = self.query_one(TaskList)
+
+        # Clear and focus the task view for new task
         task_view.clear_and_focus()
-        # Optionally, you could set a flag here if needed for new task mode
+
+        # If there are no tasks, ensure the task list is in a good state
+        if not self.tasks:
+            task_list.update_table([])
+
+        # The task view will take focus in clear_and_focus()
 
     async def action_complete_task(self):
         """Toggle completion for selected task."""
@@ -116,41 +147,46 @@ class TodoApp(App):
             if "error" in result:
                 self.notify(result["error"], severity="error", timeout=3)
                 return
+
+            # Reload tasks and update the list, focusing on the new task
             self.tasks = await self.task_store.load()
-            self.update_list()
-            # Focus the new task in the list
-            task_list = self.query_one(TaskList)
-            for idx, t in enumerate(self.tasks):
-                if t["id"] == result["id"]:
-                    table = task_list.query_one("#task-table")
-                    table.focused_cell = (idx, 0)
-                    break
-            self.query_one(TaskView).update_task(result)
+            self.update_list(focus_task_id=result["id"])
+
+            # Notify user
+            self.notify("Task created!", timeout=2)
+
+            # Focus the task list after a short delay
+            def focus_task_list():
+                task_list = self.query_one(TaskList)
+                task_list.focus()
+
+            self.set_timer(0.1, focus_task_list)
         else:
             # Update existing task
+            task_id = event.task["id"]
             result = await self.task_store.update_task(
-                event.task["id"],
+                task_id,
                 event.task["title"],
                 event.task["description"],
-                due_date=event.task["due_date"],
+                due_date=event.task.get("due_date"),
             )
             if "error" in result:
                 self.notify(result["error"], severity="error", timeout=3)
                 return
+
+            # Reload tasks and update the list, maintaining focus on the updated task
             self.tasks = await self.task_store.load()
-            # Find the updated task in the new list
-            updated_task = next((t for t in self.tasks if t["id"] == event.task["id"]), None)
-            # Update the list and re-select the task
-            task_list = self.query_one(TaskList)
-            task_list.update_table(self.tasks)
-            if updated_task:
-                # Find the row index for the updated task
-                for idx, t in enumerate(self.tasks):
-                    if t["id"] == updated_task["id"]:
-                        table = task_list.query_one("#task-table")
-                        table.focused_cell = (idx, 0)
-                        break
-                self.query_one(TaskView).update_task(updated_task)
+            self.update_list(focus_task_id=task_id)
+
+            # Notify user
+            self.notify("Task updated!", timeout=2)
+
+            # Focus the task list after a short delay
+            def focus_task_list():
+                task_list = self.query_one(TaskList)
+                task_list.focus()
+
+            self.set_timer(0.1, focus_task_list)
 
     async def action_delete_task(self):
         """Handle task deletion flow."""

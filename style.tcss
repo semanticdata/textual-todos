@@ -9,12 +9,31 @@ Screen {
   border: solid $primary;
   height: 1fr;
   scrollbar-gutter: stable;
-  # row-span: 2;
   padding: 0;
+}
+
+#task-list:focus-within {
+  border: double $accent;
+}
+
+#task-list:focus-within > .title {
+  background: $accent 50%;
+  text-style: bold;
+  color: $text;
 }
 
 #task-table {
   height: 100%;
+}
+
+/* Style for focused row in the task table */
+#task-table:focus .data-table--cursor {
+  background: $accent 20%;
+  color: $text;
+}
+
+#task-table:focus .data-table--hover {
+  background: $accent 10%;
 }
 
 .completed {
@@ -77,6 +96,7 @@ Button.error {
 }
 
 #task-table,
+#task-view,
 #task-view-title,
 #task-view-desc,
 #task-view-due-date,
